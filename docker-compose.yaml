@@ -15,8 +15,8 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: nodedb
-    ports:
-      - "3306:3306"
+    # ports:
+    #   - "3306:3306"
     networks: 
       - network-eps  
 
@@ -27,12 +27,23 @@ services:
     image: eps364/node
     container_name: app
     tty: true
-    ports:
-      - "3000:3000"
+    # ports:
+    #   - "3000:3000"
     depends_on: 
       - db
     networks: 
-      - network-eps   
+      - network-eps
+    
+  nginx:
+    build: 
+      context: ./nginx
+      dockerfile: Dockerfile
+    image: eps364/nginx
+    container_name: nginx
+    ports:
+      - "8085:80"
+    networks: 
+      - network-eps
 
 networks: 
   network-eps:
