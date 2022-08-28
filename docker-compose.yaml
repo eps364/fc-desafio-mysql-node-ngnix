@@ -18,7 +18,21 @@ services:
     ports:
       - "3306:3306"
     networks: 
-      - network-eps     
+      - network-eps  
+
+  app:
+    build: 
+      context: ./node
+      dockerfile: Dockerfile
+    image: eps364/node
+    container_name: app
+    tty: true
+    ports:
+      - "3000:3000"
+    depends_on: 
+      - db
+    networks: 
+      - network-eps   
 
 networks: 
   network-eps:
