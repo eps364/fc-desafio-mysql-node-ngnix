@@ -1,0 +1,25 @@
+version: '3'
+
+services: 
+  db:
+    build: 
+      context: ./mysql
+      dockerfile: Dockerfile
+    image: eps364/mysql
+    command: --default-authentication-plugin=mysql_native_password
+    container_name: mysql
+    restart: always
+    volumes:
+      - .data/bd:/var/lib/mysql:rw
+      - ./mysql/db:/docker-entrypoint-initdb.d:rw
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: nodedb
+    ports:
+      - "3306:3306"
+    networks: 
+      - network-eps     
+
+networks: 
+  network-eps:
+    driver: bridge 
