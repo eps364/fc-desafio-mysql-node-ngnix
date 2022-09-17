@@ -7,6 +7,7 @@ services:
     build: 
       context: ./nginx
       dockerfile: Dockerfile
+    image: proxy
     networks: 
       - eps364
     depends_on: 
@@ -16,6 +17,7 @@ services:
     build: 
       context: ./node
       dockerfile: Dockerfile
+    image: app
     working_dir: /home/node/app
     entrypoint: dockerize -wait tcp://db:3306 -timeout 20s docker-entrypoint.sh
     command: sh -c "npm start"
@@ -25,6 +27,9 @@ services:
       - eps364
 
   db:
+    build: 
+      context: ./mysql
+      dockerfile: Dockerfile
     image: mysql
     command: --default-authentication-plugin=mysql_native_password
     environment:
@@ -32,6 +37,9 @@ services:
       MYSQL_DATABASE: mysql
       MYSQL_USER: mysql
       MYSQL_PASSWORD: mysql
+    volumes:
+      - .data/bd:/var/lib/mysql:rw
+      - ./mysql/db:/docker-entrypoint-initdb.d:rw
     ports:
       - "3306:3306"
     networks: 
