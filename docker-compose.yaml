@@ -1,50 +1,42 @@
 version: '3'
 
-services: 
-  db:
+services:
+  proxy:
+    ports:
+      - "8080:80"
     build: 
-      context: ./mysql
+      context: ./nginx
       dockerfile: Dockerfile
-    image: eps364/mysql
-    command: --default-authentication-plugin=mysql_native_password
-    container_name: mysql
-    restart: always
-    volumes:
-      - .data/bd:/var/lib/mysql:rw
-      - ./mysql/db:/docker-entrypoint-initdb.d:rw
-    environment:
-      MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: nodedb
-    # ports:
-    #   - "3306:3306"
     networks: 
-      - network-eps  
+      - eps364
+    depends_on: 
+      - app
 
   app:
     build: 
       context: ./node
       dockerfile: Dockerfile
-    image: eps364/node
-    container_name: app
-    tty: true
-    # ports:
-    #   - "3000:3000"
+    working_dir: /home/node/app
+    entrypoint: dockerize -wait tcp://db:3306 -timeout 20s docker-entrypoint.sh
+    command: sh -c "npm start"
     depends_on: 
       - db
     networks: 
-      - network-eps
-    
-  nginx:
-    build: 
-      context: ./nginx
-      dockerfile: Dockerfile
-    image: eps364/nginx
-    container_name: nginx
+      - eps364
+
+  db:
+    image: mysql
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: mysql
+      MYSQL_DATABASE: mysql
+      MYSQL_USER: mysql
+      MYSQL_PASSWORD: mysql
     ports:
-      - "8080:80"
+      - "3306:3306"
     networks: 
-      - network-eps
+      - eps364
 
 networks: 
-  network-eps:
-    driver: bridge 
+  eps364:
+    driver: bridge

@@ -1,58 +1,36 @@
-const express = require("express");
-const axios = require("axios").default;
-const mysql = require("mysql");
+const express = require("express")
+const faker = require("faker")
+const mysql = require('mysql')
+const app = express()
 
-const app = express();
-const PORT = 3000;
+const port = 3000
 
-const config = {
-  host: "db",
-  user: "root",
-  password: "password",
-  database: "nodedb",
-};
+const connection = mysql.createConnection({
+    host: 'db',
+    user: 'mysql',
+    password: 'mysql',
+    database: 'mysql',
+})
 
-app.get("/", (req, res) => {
-  insertPeopleName(res);
-});
+const sqlCreateTable = 'CREATE TABLE IF NOT EXISTS people (id int NOT NULL AUTO_INCREMENT, name varchar(255) NOT NULL, PRIMARY KEY (id));'
+connection.query(sqlCreateTable)
 
-app.listen(PORT, () => {
-  console.log("STARTED AT " + PORT);
-});
 
-async function getPersonName() {
-  const RANDOM = Math.floor(Math.random() * 10);
-  const response = await axios.get("https://swapi.dev/api/people");
-  personName = response.data.results;
-  return personName[RANDOM].name;
-}
+app.get("/",(req, res) => {
+    const sqlInsert = `INSERT INTO people (name) values ('${faker.name.firstName()}');`
+    connection.query(sqlInsert)
 
-async function insertPeopleName(res) {
-  const name = await getPersonName();
-  const connection = mysql.createConnection(config);
-  const sql = `INSERT INTO people(name) values('${name}')`;
+    const sqlSelect = `SELECT * FROM people;`
+    connection.query(sqlSelect, function (error, results, fields) {
+        if (results) {
+            const data = results.map((data) => `<li>${data.name}</li>`)
+            res.send(`<h1>Full Cycle Rocks!</h1><ul>${data.join("")}</ul>`)
+        } else {
+            res.send(`<h1>Full Cycle Rocks!</h1>`)
+        }
+    })
+})
 
-  connection.query(sql);
-  console.log(`${name} inserido no banco!`);
-  getPeople(res, connection);
-}
-
-function getPeople(res, connection) {
-  const sql = `SELECT id, name FROM people`;
-
-  connection.query(sql, (error, results, fields) => {
-    if (error) {
-      throw error;
-    }
-
-    let table = "<table>";
-    table += "<tr><th>#</th><th>Name</th></tr>";
-    for (let people of results) {
-      table += `<tr><td>${people.id}</td><td>${people.name}</td></tr>`;
-    }
-
-    table += "</table>";
-    res.send("<h1>Full Cycle Rocks!</h1>" + table);
-  });
-  connection.end();
-}
+app.listen(port, () => {
+    console.log(`Listening on port ${port}`)
+})
